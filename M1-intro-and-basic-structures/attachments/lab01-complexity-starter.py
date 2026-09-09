@@ -60,31 +60,51 @@ POW_CALLS = 20_000    # вызовов binary_pow на один замер: ин
 
 
 def array_sum(a: list[int]) -> int:
-    """Сумма элементов массива. Ожидаемая сложность: TODO (обосновать в отчёте)."""
-    # TODO: реализовать циклом
-    raise NotImplementedError
+    """Сумма элементов массива. Ожидаемая сложность: 0(n) (линейная)."""
+    res=0
+    for x in a:
+        res+=x
+    return res
+    
 
 
 def array_max(a: list[int]) -> int:
-    """Максимум массива (массив непуст). Ожидаемая сложность: TODO."""
-    # TODO: реализовать циклом
-    raise NotImplementedError
+    """Максимум массива (массив непуст). Ожидаемая сложность: 0(n) (линейная)."""
+    max=a[0]
+    for i in range(1,len(a)):
+        if a[i]>max:
+            max=a[i]
+    return max
 
 
 def count_equal_pairs(a: list[int]) -> int:
-    """Число пар (i, j), i < j, таких что a[i] == a[j]. Ожидаемая сложность: TODO."""
-    # TODO: реализовать двойным циклом
-    raise NotImplementedError
+    """Число пар (i, j), i < j, таких что a[i] == a[j]. Ожидаемая сложность: 0(n^2) (квадратичная)."""
+    cou=0
+    length=len(a)
+    for i in range(length):
+        for j in range(i+1,length):
+            if a[i]==a[j]:
+                cou+=1
+    return cou
 
 
 def binary_pow(x: int, n: int, mod: int | None = None) -> int:
-    """Бинарное возведение в степень, n >= 0. Ожидаемая сложность: TODO.
+    """Бинарное возведение в степень, n >= 0. Ожидаемая сложность: 0(log n) (логарифмическая)."""
+    result=1
+    if mod is not None:
+        x=x%mod
 
-    При заданном mod все умножения выполняются по модулю (результат x**n % mod).
-    """
-    # TODO: реализовать через квадрирование; при mod применять % mod после
-    # каждого умножения
-    raise NotImplementedError
+    while n>0:
+        if n%2==1:
+            result=result*x
+            if mod is not None:
+                result=result%mod
+        x=x*x
+        if mod is not None:
+            x=x%mod
+        n//=2
+
+    return result
 
 
 # ---------------------------------------------------------------------------
