@@ -14,6 +14,7 @@ import argparse
 import random
 import statistics
 import time
+import matplotlib.pyplot as plt
 
 # ---------------------------------------------------------------------------
 # 1. Простые сортировки со счётчиками (сортируют КОПИЮ входа, вход не меняют)
@@ -23,25 +24,71 @@ import time
 
 
 def bubble_sort(a: list) -> tuple[list, int, int]:
-    """Сортировка пузырьком. Ожидаемая сложность: TODO (обосновать в отчёте).
-
-    Подсказка: досрочный выход, если за проход не было ни одного обмена, —
-    именно он даёт лучший случай на упорядоченном входе.
-    """
-    # TODO: реализовать; считать сравнения и обмены
-    raise NotImplementedError
-
+    """Сортировка пузырьком. Ожидаемая сложность: в лучшем O(n), в среднем и худшем O(n^2)."""
+    arr = a.copy()
+    n = len(arr)
+    comparisons = 0
+    swaps = 0
+    
+    for i in range(n):
+        swapped = False
+        for j in range(0, n - i - 1):
+            comparisons += 1
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                swaps += 1
+                swapped = True
+        if not swapped:
+            break
+            
+    return arr, comparisons, swaps
 
 def insertion_sort(a: list) -> tuple[list, int, int]:
-    """Сортировка вставками. Ожидаемая сложность: TODO (лучший/худший случаи)."""
-    # TODO: реализовать; считать сравнения и перемещения (сдвиги)
-    raise NotImplementedError
+    """Сортировка вставками. Ожидаемая сложность: лучший O(n), худший O(n^2)."""
+    arr = a.copy()
+    n = len(arr)
+    comparisons = 0
+    shifts = 0
+    
+    for i in range(1, n):
+        key = arr[i]
+        j = i - 1
+        
+        while j >= 0:
+            comparisons += 1
+            if arr[j] > key:
+                arr[j + 1] = arr[j]
+                shifts += 1
+                j -= 1
+            else:
+                break
+                
+        if j + 1 != i:
+            arr[j + 1] = key
+            shifts += 1
+            
+    return arr, comparisons, shifts
 
 
 def selection_sort(a: list) -> tuple[list, int, int]:
-    """Сортировка выбором. Ожидаемая сложность: TODO (почему не зависит от входа?)."""
-    # TODO: реализовать; считать сравнения и обмены
-    raise NotImplementedError
+    """Сортировка выбором. Ожидаемая сложность: O(n^2) всегда (ищет минимум по всему остатку)."""
+    arr = a.copy()
+    n = len(arr)
+    comparisons = 0
+    swaps = 0
+    
+    for i in range(n):
+        min_idx = i
+        for j in range(i + 1, n):
+            comparisons += 1
+            if arr[j] < arr[min_idx]:
+                min_idx = j
+                
+        if min_idx != i:
+            arr[i], arr[min_idx] = arr[min_idx], arr[i]
+            swaps += 1
+            
+    return arr, comparisons, swaps
 
 
 # ---------------------------------------------------------------------------
@@ -51,16 +98,35 @@ def selection_sort(a: list) -> tuple[list, int, int]:
 
 def quick_sort(a: list, rng: random.Random | None = None) -> list:
     """QuickSort с выбором опорного через rng.randrange. Возвращает новый список.
-
-    Ожидаемая сложность: в среднем TODO, в худшем случае TODO (обосновать
-    в отчёте, объяснить роль рандомизации). rng передаётся снаружи, чтобы
-    запуск был воспроизводим по seed варианта.
+    Ожидаемая сложность: в среднем O(n log n), в худшем случае O(n^2).
     """
     if rng is None:
         rng = random.Random()
-    # TODO: реализовать (рекурсивно или циклом со стеком);
-    # TODO: опорный элемент — a[rng.randrange(lo, hi)], не первый и не последний.
-    raise NotImplementedError
+        
+    arr = a.copy()
+
+    def _qs(lo: int, hi: int):
+        if lo >= hi:
+            return
+            
+        p_idx = rng.randrange(lo, hi + 1)
+        pivot = arr[p_idx]
+
+        arr[p_idx], arr[hi] = arr[hi], arr[p_idx]
+        
+        i = lo
+        for j in range(lo, hi):
+            if arr[j] < pivot:
+                arr[i], arr[j] = arr[j], arr[i]
+                i += 1
+                
+        arr[i], arr[hi] = arr[hi], arr[i]
+
+        _qs(lo, i - 1)
+        _qs(i + 1, hi)
+
+    _qs(0, len(arr) - 1)
+    return arr
 
 
 # ---------------------------------------------------------------------------
@@ -69,15 +135,29 @@ def quick_sort(a: list, rng: random.Random | None = None) -> list:
 
 
 def stability_demo() -> None:
-    """Показать, какие из четырёх сортировок стабильны.
+    """Показать, какие из четырёх сортировок стабильны."""
+    
+    class Item:
+        def __init__(self, key, label):
+            self.key = key
+            self.label = label
+        def __lt__(self, other): return self.key < other.key
+        def __le__(self, other): return self.key <= other.key
+        def __gt__(self, other): return self.key > other.key
+        def __ge__(self, other): return self.key >= other.key
+        def __eq__(self, other): return self.key == other.key
+        def __repr__(self): return f"({self.key}, '{self.label}')"
 
-    План: взять массив пар (ключ, метка) с повторяющимися ключами, например
-    [(2, "a"), (1, "b"), (2, "c"), (1, "d")], отсортировать каждой сортировкой
-    по ключу (сравнение только по p[0]!) и напечатать порядок меток при равных
-    ключах. Вывод о стабильности каждой сортировки включить в отчёт.
-    """
-    # TODO: подготовить пары, прогнать все четыре сортировки, напечатать итог
-    raise NotImplementedError
+    raw_data = [(2, "a"), (1, "b"), (2, "c"), (1, "d")]
+    items = [Item(k, l) for k, l in raw_data]
+    
+    print("\n--- Демонстрация стабильности ---")
+    print(f"Исходный массив: {items}")
+    
+    print(f"Bubble Sort    : {bubble_sort(items)[0]} (Стабильная)")
+    print(f"Insertion Sort : {insertion_sort(items)[0]} (Стабильная)")
+    print(f"Selection Sort : {selection_sort(items)[0]} (НЕ стабильная)")
+    print(f"QuickSort      : {quick_sort(items, random.Random(0))} (НЕ стабильная)")
 
 
 # ---------------------------------------------------------------------------
@@ -164,24 +244,58 @@ def bench(fn, data: list) -> float:
 
 
 def run_benchmarks(seed: int) -> None:
-    """Замеры всех алгоритмов на трёх классах входов; результат — таблица в stdout."""
+    """Замеры всех алгоритмов на трёх классах входов и построение log-log графиков."""
     plans = [
         ("bubble_sort", ALGORITHMS["bubble_sort"], SIZES_QUADRATIC),
         ("insertion_sort", ALGORITHMS["insertion_sort"], SIZES_QUADRATIC),
         ("selection_sort", ALGORITHMS["selection_sort"], SIZES_QUADRATIC),
         ("quick_sort", lambda a: quick_sort(a, random.Random(seed)), SIZES_QUICK),
     ]
+    
+    # Словарик для хранения времени, чтобы потом нарисовать графики
+    plot_data = {
+        "упорядоченный": {name: ([], []) for name, _, _ in plans},
+        "случайный": {name: ([], []) for name, _, _ in plans},
+        "обратный": {name: ([], []) for name, _, _ in plans},
+    }
+
     for name, fn, sizes in plans:
         print(f"\n{name}:")
         for n in sizes:
             for cls, data in make_inputs(n, seed).items():
-                print(f"  n={n:>7}  вход={cls:<13} t={bench(fn, data):.6f} c")
-    # TODO: построить log-log графики (matplotlib) по классам входов;
-    # TODO: сопоставить наклоны с O(n^2) и O(n log n), объяснить расхождения
-    #       (в т. ч. лучший случай вставок и поведение пузырька на упорядоченном входе);
-    # TODO: включить в отчёт таблицы счётчиков сравнений/обменов.
+                t = bench(fn, data)
+                print(f"  n={n:>7}  вход={cls:<13} t={t:.6f} c")
+                
+                # Сохраняем n и t для графика
+                plot_data[cls][name][0].append(n)
+                plot_data[cls][name][1].append(t)
 
+    # Строим 3 графика рядом (для каждого типа входа)
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    classes = ["упорядоченный", "случайный", "обратный"]
 
+    for ax, cls in zip(axes, classes):
+        ax.set_title(f"Вход: {cls}")
+        ax.set_xlabel("Размер массива n")
+        ax.set_ylabel("Время t (сек)")
+        
+        # Включаем логарифмический масштаб по обеим осям (log-log)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.grid(True, which="both", ls="--", alpha=0.5)
+
+        # Рисуем линии сортировок
+        for name, _, _ in plans:
+            ns, ts = plot_data[cls][name]
+            if ns and ts:
+                ax.plot(ns, ts, marker='o', label=name)
+                
+        ax.legend()
+
+    plt.tight_layout()
+    plt.savefig("sorting_graphs.png", dpi=300) # Эта строка сохранит файл в высоком качестве
+    plt.show()                                 # А эта по-прежнему выведет окно на экран
+    
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--variant", type=int, required=True, help="номер варианта")
